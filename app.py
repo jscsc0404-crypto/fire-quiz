@@ -122,7 +122,7 @@ def ai_grade_answer(
 
   try:
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+      model = genai.GenerativeModel("gemini-2.5-flash")
 
     prompt = f"""
 너는 소방시설관리사 2차 채점관이다. 수험생 답안을 검토하여 정답 여부와 부분 점수를 판정하라.
