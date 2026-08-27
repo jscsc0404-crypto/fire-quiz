@@ -122,7 +122,7 @@ def ai_grade_answer(
 
   try:
     genai.configure(api_key=api_key)
-      model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     prompt = f"""
 너는 소방시설관리사 2차 채점관이다. 수험생 답안을 검토하여 정답 여부와 부분 점수를 판정하라.
@@ -137,7 +137,7 @@ def ai_grade_answer(
 [채점 규칙]:
 1. 의미가 일치하면 정답 인정하라.
 2. 각 항목의 배점은 (총점 / 항목수) 이다.
-3. 반드시 오직 JSON 형시으로만 반환하라. 순수 JSON 텍스트 외에 다른 설명은 넣지 마라:
+3. 반드시 오직 JSON 형식으로만 반환하라. 순수 JSON 텍스트 외에 다른 설명은 넣지 마라:
 {{
     "earned_score": 획득점수(숫자),
     "total_score": 총배점(숫자),
@@ -162,7 +162,7 @@ def ai_grade_answer(
 
 
 # 6. 화면 구성
-st.title("🚒 소방시설관리사 2차 AI 암기노트 (무료버전)")
+st.title("🚒 소방시설관리사 2차 AI 암기노트")
 
 st.session_state.cards.sort(key=lambda x: x["next_review"])
 current_card = st.session_state.cards[0]
@@ -185,7 +185,7 @@ if st.button("🤖 AI 채점하기", type="primary"):
   if not user_input.strip():
     st.warning("답안을 입력해주세요.")
   else:
-    with st.spinner("무료 AI가 채점 중입니다..."):
+    with st.spinner("AI가 채점 중입니다..."):
       result = ai_grade_answer(
           current_card["question"],
           current_card["standard_answers"],
