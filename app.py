@@ -1,7 +1,7 @@
 import json
 import math
 from datetime import datetime, timedelta
-import google.generativeai as genai
+from google import genai
 import streamlit as st
 
 # 1. 화면 최적화 설정
@@ -108,7 +108,7 @@ def update_anki_schedule(card, score, max_score):
   card["next_review"] = (datetime.now() + timedelta(days=interval)).isoformat()
 
 
-# 5. Gemini AI 채점 함수 (표준 무료 모델 적용)
+# 5. 최신 Google GenAI SDK 적용 채점 함수
 def ai_grade_answer(
     question, standard_answers, total_score, user_answer, api_key
 ):
@@ -121,8 +121,7 @@ def ai_grade_answer(
     }
 
   try:
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    client = genai.Client(api_key=api_key)
 
     prompt = f"""
 너는 소방시설관리사 2차 채점관이다. 수험생 답안을 검토하여 정답 여부와 부분 점수를 판정하라.
@@ -152,8 +151,10 @@ def ai_grade_answer(
     ]
 }}
 """
-    response = model.generate_content(
-        prompt, generation_config={"response_mime_type": "application/json"}
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config={"response_mime_type": "application/json"},
     )
     return json.loads(response.text)
   except Exception as e:
