@@ -108,7 +108,7 @@ def update_anki_schedule(card, score, max_score):
   card["next_review"] = (datetime.now() + timedelta(days=interval)).isoformat()
 
 
-# 5. 최신 Google GenAI SDK 적용 채점 함수
+# 5. 최신 모델 적용 채점 함수
 def ai_grade_answer(
     question, standard_answers, total_score, user_answer, api_key
 ):
@@ -152,7 +152,7 @@ def ai_grade_answer(
 }}
 """
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.6-flash",
         contents=prompt,
         config={"response_mime_type": "application/json"},
     )
