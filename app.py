@@ -1,7 +1,7 @@
 import json
 import math
 from datetime import datetime, timedelta
-import openai
+import google.generativeai as genai
 import streamlit as st
 
 # 1. 화면 최적화 설정
@@ -25,9 +25,11 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 2. OpenAI API 키 입력
+# 2. Gemini API 키 입력
 st.sidebar.title("⚙️ 설정")
-api_key = st.sidebar.text_input("OpenAI API Key를 입력하세요", type="password")
+api_key = st.sidebar.text_input(
+    "Google Gemini API Key를 입력하세요", type="password"
+)
 
 # 3. 데이터 및 상태 초기화
 if "cards" not in st.session_state:
@@ -106,20 +108,23 @@ def update_anki_schedule(card, score, max_score):
   card["next_review"] = (datetime.now() + timedelta(days=interval)).isoformat()
 
 
-# 5. AI 채점 함수
+# 5. Gemini AI 채점 함수
 def ai_grade_answer(
     question, standard_answers, total_score, user_answer, api_key
 ):
   if not api_key:
     return {
         "error": (
-            "OpenAI API Key가 설정되지 않았습니다. 사이드바에 키를"
+            "Gemini API Key가 설정되지 않았습니다. 사이드바에 키를"
             " 입력하세요."
         )
     }
 
-  client = openai.OpenAI(api_key=api_key)
-  prompt = f"""
+  try:
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel("gemini-1.5-flash")
+
+    prompt = f"""
 너는 소방시설관리사 2차 채점관이다. 수험생 답안을 검토하여 정답 여부와 부분 점수를 판정하라.
 
 [문제]: {question}
@@ -132,7 +137,7 @@ def ai_grade_answer(
 [채점 규칙]:
 1. 의미가 일치하면 정답 인정하라.
 2. 각 항목의 배점은 (총점 / 항목수) 이다.
-3. 결과를 JSON 형식으로 반환하라:
+3. 반드시 오직 JSON 형시으로만 반환하라. 순수 JSON 텍스트 외에 다른 설명은 넣지 마라:
 {{
     "earned_score": 획득점수(숫자),
     "total_score": 총배점(숫자),
@@ -147,19 +152,17 @@ def ai_grade_answer(
     ]
 }}
 """
-  try:
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        response_format={"type": "json_object"},
+    response = model.generate_content(prompt)
+    clean_text = (
+        response.text.replace("```json", "").replace("```", "").strip()
     )
-    return json.loads(response.choices[0].message.content)
+    return json.loads(clean_text)
   except Exception as e:
     return {"error": f"API 오류: {str(e)}"}
 
 
 # 6. 화면 구성
-st.title("🚒 소방시설관리사 2차 AI 암기노트")
+st.title("🚒 소방시설관리사 2차 AI 암기노트 (무료버전)")
 
 st.session_state.cards.sort(key=lambda x: x["next_review"])
 current_card = st.session_state.cards[0]
@@ -182,7 +185,7 @@ if st.button("🤖 AI 채점하기", type="primary"):
   if not user_input.strip():
     st.warning("답안을 입력해주세요.")
   else:
-    with st.spinner("AI가 채점 중입니다..."):
+    with st.spinner("무료 AI가 채점 중입니다..."):
       result = ai_grade_answer(
           current_card["question"],
           current_card["standard_answers"],
